@@ -1,0 +1,21 @@
+Three versions, all using your verified numbers.
+
+Standard (three bullets):
+
+• Built an explainable churn-prediction pipeline over 8,453 Bulgarian telecom business-customer records (6.49% churn, 14.4:1 imbalance), comparing financial against service-engagement feature groups across Logistic Regression, Random Forest and XGBoost under 5×5 repeated stratified cross-validation (225 model fits).
+
+• Established through paired significance testing that neither feature family carried a robust predictive advantage — financial features led on ROC-AUC for tree models (+0.034, p<0.001) but no PR-AUC comparison reached significance, and per-feature SHAP attribution showed a tie (0.1003 vs 0.1036) — reporting the weak-signal result honestly rather than overstating a marginal effect.
+
+• Applied SHAP and permutation importance to identify average mobile revenue as the strongest predictor, and quantified that the best model (PR-AUC 0.0882 vs 0.0651 no-skill floor, 8.5% precision) was unfit for deployment, recommending instead a value-tier retention strategy grounded in an observed 8.57%-vs-3.66% churn gradient.
+
+Compressed (two bullets, tight CV space):
+
+• Developed an explainable ML pipeline (Logistic Regression, Random Forest, XGBoost) over 8,453 telecom business-customer records to test whether financial or service-engagement attributes better predict churn, using 5×5 repeated stratified cross-validation with paired significance testing across 225 model fits.
+
+• Found no robust difference between feature groups (PR-AUC comparisons non-significant; per-feature SHAP attribution tied) and identified the best model as unfit for deployment at 8.5% precision — translating a negative result into a data-collection recommendation rather than a false positive finding.
+
+One-liner:
+
+• Explainable churn-prediction study on 8,453 telecom business customers: compared financial vs service-engagement feature groups across three models with repeated cross-validation and SHAP, finding no robust difference and reporting the weak-signal result (best PR-AUC 0.0882 vs 0.0651 baseline) rather than overstating marginal effects.
+
+Why lead with a negative result on a CV? Because "I found nothing and said so, with the statistics to back it" is rarer and harder to fake than "I got 95% accuracy." Any interviewer who has cleaned real data will recognise it. And if someone dismisses the project for not having a big number, the follow-up question they'd have asked — how do you know your model is actually good? — is one you can answer and most candidates can't.

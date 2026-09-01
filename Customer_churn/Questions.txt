@@ -1,0 +1,54 @@
+1. Why this dataset?
+Real business-to-business churn data is rare — most public churn datasets are consumer telco or synthetic. This one has 8,453 genuine business-customer records from a European operator, with a natural financial/engagement split in its columns that made a controlled feature-group comparison possible.
+
+2. Why does churn prediction matter?
+Retaining a customer is typically far cheaper than acquiring one, and in B2B telecom each account represents many subscriber lines. My analysis found high-value segments churning at 8.57% versus 3.66% for low-value ones, so the revenue exposure is concentrated in exactly the accounts you least want to lose.
+
+3. Why isn't accuracy enough?
+Churn is 6.49% of the data. A model predicting "nobody churns" gets 93.49% accuracy and identifies zero churners. In my results that baseline beat every one of the nine models on accuracy, because class weighting trades accuracy for recall. I used F1, Recall, ROC-AUC and PR-AUC, with PR-AUC as primary since it has a meaningful floor at the churn prevalence (0.0651).
+
+4. Why compare feature groups?
+Because "which model is best" is a less useful question than "what kind of information predicts churn." Model choice is a technical decision; feature availability is a business decision about what data to collect. If engagement data had won, that would justify investment in usage tracking. Holding the models constant and varying only the feature set isolates that.
+
+5. Why Logistic Regression?
+An interpretable linear baseline with directly readable coefficients and odds ratios. It turned out to be the most stable model here — the only one that never went below random — which is common when signal is weak, since it can't overfit the way a 400-tree ensemble can.
+
+6. Why Random Forest?
+To capture non-linearity and interactions that a linear model would miss, with built-in importances. It's also where I got my most instructive result: Engagement + Random Forest scored ROC-AUC 0.4928, below random, which is a clean demonstration of overfitting on near-zero signal.
+
+7. Why XGBoost?
+Gradient boosting is the strongest general-purpose method for tabular data, so it sets a realistic performance ceiling. It gave the best held-out PR-AUC (0.0882) — and the fact that even a well-regularised booster only reached that number is strong evidence the ceiling is in the data, not the algorithm.
+
+8. Why is class imbalance a problem?
+It makes accuracy meaningless, and it biases models toward the majority class — with 439 training churners against 6,323 non-churners, the loss function is dominated by the negatives. I used class weighting rather than SMOTE: no synthetic customers, it composes safely with cross-validation, and with signal this weak, synthesising minority points risks manufacturing structure that isn't there. The test set was never resampled.
+
+9. Why stratified splitting?
+To hold the 6.49% churn rate constant in both halves. With only 549 positives, an unstratified split could shift test prevalence enough to make metrics incomparable — and PR-AUC's baseline is the prevalence, so it would move the goalposts. My split produced 6.49% train and 6.51% test.
+
+10. What is SHAP?
+It assigns each feature a contribution to an individual prediction, based on Shapley values from cooperative game theory — the average marginal contribution of a feature across all possible orderings. Contributions sum to the gap between the model's base value and its prediction, so it explains both individual cases and, aggregated, global behaviour.
+
+11. What did the model actually learn?
+Mostly account size and revenue level. Churners had a median total revenue of 140.17 versus 111.67, and a median of 9 subscriber lines versus 7. It did not learn the disengagement pattern I expected — dormant subscriber medians were identical between churners and non-churners.
+
+12. What was the most important feature?
+AvgMobileRevenue, consistently across all four methods: highest univariate correlation (r=+0.065), highest permutation importance (0.0162), highest mean |SHAP| (0.4185). Though "most important" is relative — an r of 0.065 explains under 0.5% of variance.
+
+13. Which feature group performed best?
+Neither, robustly. Financial features won significantly on ROC-AUC for the tree models (+0.034 and +0.028, p<0.001), but not for Logistic Regression (p=0.179), and no PR-AUC comparison was significant — the sign even reversed for Logistic Regression. Per-feature SHAP attribution showed a tie. Critically, the significant tree results are explained by Engagement + Random Forest dropping below random, so financial features won by degrading less, not by predicting well. Combining the groups never helped (p = 0.08, 0.63, 0.63).
+
+14. What would you improve with more time?
+Get better features rather than better models. The dataset has no tenure, contract end dates, complaint history, or usage trends — the strongest known churn predictors are simply absent, and it's a point-in-time snapshot of a fundamentally temporal process. Secondarily: cost-sensitive threshold optimisation using real retention-campaign economics, and nested cross-validation for hyperparameter tuning.
+
+15. What are the limitations?
+One operator in one country, so no generalisation. Only 549 churners — and I demonstrated the consequence directly: CV and single-split rankings of my nine configurations were almost completely reordered. Two features are near-constant (98.6% and 95.8% zero). Observational data, so nothing causal. And explainability here faithfully describes a model that's barely better than random — a faithful explanation of a poor model isn't an insight about churn.
+
+Two questions you should be ready for
+
+"Isn't a negative result a failed project?"
+
+No — the project answered its question. It asked whether financial or engagement attributes predict churn better, and the answer is that neither does, because there's very little signal to divide. I know that's the answer rather than suspecting it, because I tested it with repeated cross-validation and paired significance tests instead of eyeballing a single split. The failure mode would have been reporting Random Forest's p<0.001 result as a decisive finding without noticing it was driven by the comparison model going below random.
+
+"Could you have gotten better results?"
+
+Possibly marginally, with heavy tuning or stacking. But the strongest univariate correlation in the entire dataset is 0.065, and even a well-regularised gradient booster reached only PR-AUC 0.0882 against a 0.0651 floor. That pattern says the ceiling is in the features, not the algorithm. Spending a day tuning to reach 0.09 would have produced a worse project than spending it establishing why 0.09 is the ceiling.
